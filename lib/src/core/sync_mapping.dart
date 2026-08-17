@@ -409,12 +409,11 @@ final class CustomScrollSyncMapping extends ScrollSyncMapping {
   CustomScrollSyncMapping({
     required ScrollSyncMemberToGroup memberToGroup,
     required ScrollSyncGroupToMember groupToMember,
-    bool isInvertible = true,
+    super.isInvertible,
   })  : _memberToGroup = memberToGroup,
         _groupToMember = groupToMember,
         super._(
           ScrollSyncMappingKind.custom,
-          isInvertible: isInvertible,
         );
 
   final ScrollSyncMemberToGroup _memberToGroup;
