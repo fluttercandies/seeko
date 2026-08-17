@@ -1,0 +1,137 @@
+schemaVersion: cockpit.test/v2
+kind: case
+id: seekoAdvancedDrivers
+name: Seeko advanced driver journeys
+description: Validates Grid, NestedScroll, snap, focus reveal, target loading, and restoration on macOS.
+tags: [release, macos, advanced, scrolling]
+target:
+  platform: macos
+  targetKind: flutterApp
+  plane: semantic
+defaults:
+  commandTimeoutMs: 30000
+  cleanupTimeoutMs: 20000
+  failFast: true
+  evidence:
+    screenshot: onFailure
+    snapshot: onFailure
+    failurePolicy: failStep
+setup:
+  - stepId: verifyInitialRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /target-navigation}
+steps:
+  - stepId: openNavigationForGrid
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealGrid
+    action:
+      type: scrollUntilVisible
+      locator: {text: Grid}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openGrid
+    action:
+      type: tap
+      locator: {text: Grid}
+  - stepId: verifyGridRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /grid}
+  - stepId: animateGridTarget
+    action:
+      type: tap
+      locator: {testId: grid-animate, fallbacks: [{label: 'Animate'}]}
+  - stepId: verifyGridResult
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertGridCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: openNavigationForAdvancedDrivers
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealAdvancedDrivers
+    action:
+      type: scrollUntilVisible
+      locator: {text: Advanced Drivers}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openAdvancedDrivers
+    action:
+      type: tap
+      locator: {text: Advanced Drivers}
+  - stepId: verifyAdvancedRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /advanced-drivers}
+  - stepId: openSnapFocusTab
+    action:
+      type: tap
+      locator: {text: Snap + Focus}
+  - stepId: revealFirstErrorAction
+    action:
+      type: scrollUntilVisible
+      locator: {testId: reveal-first-error, fallbacks: [{label: 'Reveal first error'}]}
+      direction: down
+      maxScrolls: 8
+      durationMs: 120
+      revealAlignment: center
+  - stepId: revealFirstError
+    action:
+      type: tap
+      locator: {testId: reveal-first-error, fallbacks: [{label: 'Reveal first error'}]}
+  - stepId: verifyFocusResult
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertFocusCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: openLoaderRestoreTab
+    action:
+      type: tap
+      locator: {text: Load + Restore}
+  - stepId: revealRemoteTargetAction
+    action:
+      type: scrollUntilVisible
+      locator: {testId: loader-animate, fallbacks: [{label: 'Animate'}]}
+      direction: up
+      maxScrolls: 8
+      durationMs: 120
+      revealAlignment: center
+  - stepId: loadRemoteTarget
+    action:
+      type: tap
+      locator: {testId: loader-animate, fallbacks: [{label: 'Animate'}]}
+  - stepId: verifyLoaderResult
+    retry:
+      maxAttempts: 5
+      delayMs: 350
+      steps:
+        - stepId: assertLoaderCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: captureAdvancedProof
+    action:
+      type: captureScreenshot
+      artifactName: seeko-advanced-drivers
+      captureOptions:
+        reason: acceptance
+        includeSnapshot: true
+        attachToStep: true
+        profile: flutterPreferred
+        allowFallback: true

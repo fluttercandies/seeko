@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Validate and publish to pub.dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: pub.dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Require tag and package versions to match
+        shell: bash
+        run: |
+          package_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test "v${package_version}" = "${GITHUB_REF_NAME}"
+
+      - name: Resolve workspace dependencies
+        run: flutter pub get
+
+      - name: Verify source cleanliness
+        run: |
+          dart fix --apply
+          dart format .
+          git diff --exit-code
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Test
+        run: dart run melos run test
+
+      - name: Run benchmark smoke test
+        run: dart run melos run benchmark:smoke
+
+      - name: Validate API documentation
+        run: dart doc --validate-links
+
+      - name: Audit publish archive
+        run: dart pub publish --dry-run
+
+      - name: Publish with pub.dev trusted publishing
+        run: dart pub publish --force
+
+  github-release:
+    name: Create GitHub release
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Create release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --generate-notes
+

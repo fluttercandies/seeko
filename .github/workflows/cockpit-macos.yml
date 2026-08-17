@@ -1,0 +1,93 @@
+name: Cockpit macOS E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "lib/**"
+      - "example/**"
+      - ".github/workflows/cockpit-macos.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cockpit-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-suite:
+    name: macOS release suite
+    runs-on: [self-hosted, macOS, cockpit]
+    timeout-minutes: 90
+    environment: macos-cockpit
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install pinned Cockpit CLI
+        run: |
+          dart pub global activate cockpit 4.0.27
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Start Cockpit development target
+        working-directory: example
+        run: |
+          cockpit daemon restart --yolo
+          cockpit dev start cockpit/main.dart --platform macos --timeout 20m
+
+      - name: Validate release documents
+        working-directory: example
+        run: |
+          cockpit case validate --file cockpit/cases/core-scroll.case.yaml
+          cockpit case validate --file cockpit/cases/advanced-drivers.case.yaml
+          cockpit case validate --file cockpit/cases/g6-scenarios.case.yaml
+          cockpit suite validate --file cockpit/suites/macos-release.suite.yaml
+
+      - name: Run macOS release suite
+        id: suite
+        working-directory: example
+        env:
+          COCKPIT_KEY: seeko-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/seeko-cockpit"
+          cockpit suite run --file cockpit/suites/macos-release.suite.yaml \
+            --idempotency-key "$COCKPIT_KEY" --format json \
+            --output "$RUNNER_TEMP/seeko-cockpit/submission.json"
+          run_id="$(jq -r '.run // .runId' "$RUNNER_TEMP/seeko-cockpit/submission.json")"
+          test -n "$run_id" && test "$run_id" != "null"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          cockpit run events --run-id "$run_id" --timeout 60m
+
+      - name: Export report and diagnostics
+        if: always() && steps.suite.outputs.run_id != ''
+        working-directory: example
+        run: |
+          run_id="${{ steps.suite.outputs.run_id }}"
+          cockpit run get --run-id "$run_id" --format json --view full \
+            --output "$RUNNER_TEMP/seeko-cockpit/run.json"
+          mkdir -p "$RUNNER_TEMP/seeko-cockpit/report"
+          cockpit suite report --run-id "$run_id" \
+            --output-dir "$RUNNER_TEMP/seeko-cockpit/report"
+          jq -e '.lifecycle == "completed" and .outcome == "passed"' \
+            "$RUNNER_TEMP/seeko-cockpit/run.json"
+
+      - name: Upload Cockpit evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: seeko-cockpit-${{ github.run_id }}
+          path: ${{ runner.temp }}/seeko-cockpit
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seeko.dev/schemas/qualification-result.schema.json",
+  "title": "Seeko qualification result",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "device",
+    "operatingSystem",
+    "thermalState",
+    "powerState",
+    "refreshRateHz",
+    "flutterRevision",
+    "engineRevision",
+    "buildMode",
+    "seed",
+    "scenario",
+    "configuration",
+    "runs"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "device": {"type": "string", "minLength": 1},
+    "operatingSystem": {"type": "string", "minLength": 1},
+    "thermalState": {"type": "string", "minLength": 1},
+    "powerState": {"type": "string", "minLength": 1},
+    "refreshRateHz": {"type": "number", "minimum": 120},
+    "flutterRevision": {"type": "string", "minLength": 7},
+    "engineRevision": {"type": "string", "minLength": 7},
+    "buildMode": {"enum": ["profile", "release"]},
+    "commit": {"type": "string"},
+    "seed": {"type": "integer"},
+    "scenario": {"type": "string", "minLength": 1},
+    "configuration": {
+      "type": "object",
+      "required": [
+        "itemCount",
+        "itemExtent",
+        "warmUpMicros",
+        "minimumRunDurationMicros",
+        "minimumPresentedFrames",
+        "runCount"
+      ],
+      "properties": {
+        "itemCount": {"type": "integer", "minimum": 1},
+        "itemExtent": {"type": "number", "exclusiveMinimum": 0},
+        "warmUpMicros": {"type": "integer", "minimum": 1},
+        "minimumRunDurationMicros": {"type": "integer", "minimum": 1},
+        "minimumPresentedFrames": {"type": "integer", "minimum": 3600},
+        "runCount": {"const": 5}
+      },
+      "additionalProperties": false
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "run",
+          "elapsedMicros",
+          "presentedFrames",
+          "childBuilds",
+          "buildMicros",
+          "rasterMicros",
+          "totalMicros",
+          "within8333Ratio",
+          "within16667Ratio",
+          "samples"
+        ],
+        "properties": {
+          "run": {"type": "integer", "minimum": 1, "maximum": 5},
+          "elapsedMicros": {"type": "integer", "minimum": 30000000},
+          "presentedFrames": {"type": "integer", "minimum": 3600},
+          "childBuilds": {"type": "integer", "minimum": 0},
+          "buildMicros": {"$ref": "#/$defs/percentiles"},
+          "rasterMicros": {"$ref": "#/$defs/percentiles"},
+          "totalMicros": {"$ref": "#/$defs/percentiles"},
+          "within8333Ratio": {"type": "number", "minimum": 0, "maximum": 1},
+          "within16667Ratio": {"type": "number", "minimum": 0, "maximum": 1},
+          "samples": {
+            "type": "array",
+            "minItems": 3600,
+            "items": {
+              "type": "object",
+              "required": [
+                "frameNumber",
+                "buildMicros",
+                "rasterMicros",
+                "totalMicros",
+                "vsyncOverheadMicros"
+              ],
+              "properties": {
+                "frameNumber": {"type": "integer"},
+                "buildMicros": {"type": "integer", "minimum": 0},
+                "rasterMicros": {"type": "integer", "minimum": 0},
+                "totalMicros": {"type": "integer", "minimum": 0},
+                "vsyncOverheadMicros": {"type": "integer", "minimum": 0},
+                "layerCacheCount": {"type": "integer", "minimum": 0},
+                "layerCacheBytes": {"type": "integer", "minimum": 0},
+                "pictureCacheCount": {"type": "integer", "minimum": 0},
+                "pictureCacheBytes": {"type": "integer", "minimum": 0}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "percentiles": {
+      "type": "object",
+      "required": ["p50", "p95", "p99", "max"],
+      "properties": {
+        "p50": {"type": "integer", "minimum": 0},
+        "p95": {"type": "integer", "minimum": 0},
+        "p99": {"type": "integer", "minimum": 0},
+        "max": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

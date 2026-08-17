@@ -1,0 +1,35 @@
+schemaVersion: cockpit.test/v2
+kind: suite
+id: seekoMacosRelease
+name: Seeko macOS release journeys
+description: Required black-box release campaign for core and G6 scroll capabilities.
+tags: [release, macos, flutter]
+execution:
+  maxConcurrency: 1
+  failFast: true
+  isolation: restartApp
+  retry:
+    maxAttempts: 2
+    delayMs: 1000
+    retryOn: [blocked, interrupted, internalError]
+report:
+  formats: [json, junit, html, summary]
+  includePassedAttempts: true
+cases:
+  - id: core
+    source:
+      kind: file
+      relativePath: cockpit/cases/core-scroll.case.yaml
+      caseId: seekoCoreScroll
+  - id: g6
+    dependsOn: [core]
+    source:
+      kind: file
+      relativePath: cockpit/cases/g6-scenarios.case.yaml
+      caseId: seekoG6Scenarios
+  - id: advanced
+    dependsOn: [g6]
+    source:
+      kind: file
+      relativePath: cockpit/cases/advanced-drivers.case.yaml
+      caseId: seekoAdvancedDrivers

@@ -1,0 +1,71 @@
+name: Platform compile smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 2 * * 1"
+  push:
+    branches:
+      - main
+    paths:
+      - "example/**"
+      - "lib/**"
+      - "pubspec.yaml"
+      - ".github/workflows/platforms.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platforms-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Android debug APK
+            os: ubuntu-latest
+            command: flutter build apk --debug
+          - name: iOS simulator
+            os: macos-latest
+            command: flutter build ios --simulator --debug
+          - name: macOS release
+            os: macos-latest
+            command: flutter build macos --release
+          - name: Web release
+            os: ubuntu-latest
+            command: flutter build web --release
+          - name: Windows debug
+            os: windows-latest
+            command: flutter build windows --debug
+          - name: Linux debug
+            os: ubuntu-latest
+            command: flutter build linux --debug
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install Linux desktop dependencies
+        if: matrix.name == 'Linux debug'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Compile
+        working-directory: example
+        run: ${{ matrix.command }}

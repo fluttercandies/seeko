@@ -1,0 +1,57 @@
+name: 120 Hz macOS qualification
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualification-macos
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    name: Locked 120 Hz qualification device
+    runs-on: [self-hosted, macOS, seeko-120hz]
+    timeout-minutes: 240
+    environment: macos-120hz-qualification
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve benchmark dependencies
+        run: flutter pub get
+
+      - name: Capture native 120 Hz baseline
+        working-directory: benchmark
+        run: dart run tool/run_native_baseline.dart
+
+      - name: Capture motion prototype comparison
+        working-directory: benchmark
+        run: dart run tool/run_motion_prototypes.dart
+
+      - name: Qualify coordinator scales
+        working-directory: benchmark
+        run: dart run tool/run_scroll_sync_coordinator.dart
+
+      - name: Qualify G6 core geometry and table paths
+        working-directory: benchmark
+        run: dart run tool/run_g6_core.dart
+
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: seeko-qualification-${{ github.run_id }}
+          path: benchmark/results
+          if-no-files-found: error
+          retention-days: 90

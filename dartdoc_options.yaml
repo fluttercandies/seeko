@@ -1,0 +1,9 @@
+dartdoc:
+  errors:
+    - ambiguous-doc-reference
+    - unresolved-doc-reference
+  ignore:
+    # Repository-relative README links are correct on GitHub and pub.dev but
+    # are not copied into dartdoc's generated API site.
+    - broken-link
+

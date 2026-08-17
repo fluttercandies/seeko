@@ -1,0 +1,74 @@
+name: Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exhaustive-tests:
+    name: Exhaustive package and example tests
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve workspace dependencies
+        run: flutter pub get
+
+      - name: Run randomized package and example tests
+        run: |
+          dart test --test-randomize-ordering-seed random
+          (cd example && flutter test --test-randomize-ordering-seed random)
+
+      - name: Repeat core lifecycle tests
+        run: |
+          for attempt in 1 2 3; do
+            flutter test test/src/flutter test/src/core
+          done
+
+      - name: Run benchmark contract and scale tests
+        run: |
+          flutter test benchmark/test
+          flutter test test/src/core/scroll_sync_coordinator_kernel_test.dart
+
+      - name: Validate docs and package archive
+        run: |
+          dart doc --validate-links
+          dart pub publish --dry-run
+
+  dependency-audit:
+    name: Dependency and API audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve workspace dependencies
+        run: flutter pub get
+
+      - name: Check dependency health
+        run: |
+          flutter pub outdated --no-prereleases
+          dart analyze --fatal-infos

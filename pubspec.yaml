@@ -1,0 +1,36 @@
+name: seeko
+description: High-performance target navigation, motion, observation, and synchronization for native Flutter scrollables.
+version: 1.0.0
+homepage: https://pub.dev/packages/seeko
+repository: https://github.com/fluttercandies/seeko
+issue_tracker: https://github.com/fluttercandies/seeko/issues
+documentation: https://pub.dev/documentation/seeko/latest/
+topics:
+  - scroll
+  - synchronization
+  - navigation
+  - performance
+  - sliver
+screenshots:
+  - description: Seeko target navigation and synchronized scroll orchestration.
+    path: assets/brand/seeko-social-preview.png
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+workspace:
+  - benchmark
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ">=5.0.0 <7.0.0"
+  flutter_test:
+    sdk: flutter
+  melos: 6.3.2
+
+flutter:
+  uses-material-design: false

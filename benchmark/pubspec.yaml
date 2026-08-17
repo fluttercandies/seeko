@@ -1,0 +1,24 @@
+name: seeko_benchmark
+description: Reproducible correctness and performance harness for Seeko.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  seeko:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ">=5.0.0 <7.0.0"
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: false

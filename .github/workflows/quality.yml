@@ -1,0 +1,135 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  minimum-flutter:
+    name: Core / Flutter 3.27.0
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install Flutter 3.27.0
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: 3.27.0
+          channel: stable
+          cache: true
+
+      - name: Resolve root workspace without the newer example
+        run: flutter pub get --no-example
+
+      - name: Check core formatting
+        run: dart format --output=none --set-exit-if-changed lib test benchmark
+
+      - name: Analyze the root library
+        run: dart analyze --fatal-infos lib
+
+      - name: Analyze root tests
+        run: dart analyze --fatal-infos test
+
+      - name: Analyze benchmark sources
+        run: dart analyze --fatal-infos benchmark
+
+      - name: Run root tests
+        run: flutter test test
+
+      - name: Run benchmark schema smoke test
+        working-directory: benchmark
+        run: flutter test test/benchmark_schema_test.dart
+
+  latest-stable:
+    name: Full quality / latest stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve workspace dependencies
+        run: flutter pub get
+
+      - name: Verify automated fixes are already applied
+        run: |
+          dart fix --apply
+          git diff --exit-code
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze all packages
+        run: dart analyze --fatal-infos
+
+      - name: Run all package tests
+        run: dart run melos run test
+
+      - name: Generate root line coverage
+        run: flutter test --coverage test
+
+      - name: Enforce root line coverage floor
+        run: dart run tool/check_coverage.dart --minimum 85 coverage/lcov.info
+
+      - name: Upload root coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: root-lcov
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        with:
+          files: coverage/lcov.info
+          flags: root
+          name: seeko-root
+          slug: fluttercandies/seeko
+          fail_ci_if_error: true
+
+      - name: Run benchmark smoke test
+        run: dart run melos run benchmark:smoke
+
+      - name: Generate and validate API documentation
+        run: dart doc --validate-links
+
+      - name: Audit the publish archive
+        run: dart pub publish --dry-run
+
+  macos-example:
+    name: macOS example build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve workspace dependencies
+        run: flutter pub get
+
+      - name: Build the macOS example
+        run: dart run melos run example:build:macos

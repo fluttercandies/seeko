@@ -1,0 +1,92 @@
+schemaVersion: cockpit.test/v2
+kind: case
+id: seekoCoreScroll
+name: Seeko core scroll journeys
+description: Validates target navigation and synchronized native views on macOS.
+tags: [release, macos, core, scrolling]
+target:
+  platform: macos
+  targetKind: flutterApp
+  plane: semantic
+defaults:
+  commandTimeoutMs: 30000
+  cleanupTimeoutMs: 20000
+  failFast: true
+  evidence:
+    screenshot: onFailure
+    snapshot: onFailure
+    failurePolicy: failStep
+setup:
+  - stepId: verifyInitialRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /target-navigation}
+  - stepId: openTargetControls
+    action:
+      type: tap
+      locator: {testId: open-scenario-controls, fallbacks: [{label: Controls}]}
+steps:
+  - stepId: jumpToPixelTarget
+    action:
+      type: tap
+      locator: {testId: jump-pixels-button, fallbacks: [{label: 'Jump to 2,400 pixels'}]}
+  - stepId: verifyPixelCommand
+    retry:
+      maxAttempts: 3
+      delayMs: 250
+      steps:
+        - stepId: assertPixelResult
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: openProgressSync
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: selectProgressSync
+    action:
+      type: tap
+      locator: {text: Progress Sync}
+  - stepId: verifyProgressRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /synchronized-views/progress}
+  - stepId: verifyProgressState
+    action:
+      type: assertVisible
+      locator: {testId: progress-left-value}
+  - stepId: openVerticalCategories
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: selectVerticalCategories
+    action:
+      type: tap
+      locator: {text: Vertical Categories}
+  - stepId: verifyCategoryRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /synchronized-views/vertical-categories}
+  - stepId: selectDesserts
+    action:
+      type: tap
+      locator: {text: Desserts}
+  - stepId: verifyDessertsSelected
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertDessertsVisible
+          action:
+            type: assertVisible
+            locator: {text: Desserts}
+  - stepId: captureCoreProof
+    action:
+      type: captureScreenshot
+      artifactName: seeko-core-scroll
+      captureOptions:
+        reason: acceptance
+        includeSnapshot: true
+        attachToStep: true
+        profile: flutterPreferred
+        allowFallback: true

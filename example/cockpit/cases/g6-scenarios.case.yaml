@@ -1,0 +1,224 @@
+schemaVersion: cockpit.test/v2
+kind: case
+id: seekoG6Scenarios
+name: Seeko G6 advanced scroll journeys
+description: Validates two-dimensional, open timeline, carousel, and tree-table flows.
+tags: [release, macos, g6, scrolling]
+target:
+  platform: macos
+  targetKind: flutterApp
+  plane: semantic
+defaults:
+  commandTimeoutMs: 30000
+  cleanupTimeoutMs: 20000
+  failFast: true
+  evidence:
+    screenshot: onFailure
+    snapshot: onFailure
+    failurePolicy: failStep
+setup:
+  - stepId: verifyInitialRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /target-navigation}
+steps:
+  - stepId: openNavigationForTwoDimensional
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: openTwoDimensional
+    action:
+      type: tap
+      locator: {text: Two-dimensional}
+  - stepId: verifyTwoDimensionalRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /two-dimensional}
+  - stepId: jumpToCell
+    action:
+      type: tap
+      locator: {testId: two-dimensional-jump, fallbacks: [{label: 'Jump to cell R18 C9'}]}
+  - stepId: verifyCellCommand
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertCellCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: openNavigationForTwoDimensionalSync
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealTwoDimensionalSync
+    action:
+      type: scrollUntilVisible
+      locator: {text: Two-dimensional Sync}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openTwoDimensionalSync
+    action:
+      type: tap
+      locator: {text: Two-dimensional Sync}
+  - stepId: verifyTwoDimensionalSyncRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /two-dimensional/sync}
+  - stepId: jumpSynchronizedCell
+    action:
+      type: tap
+      locator: {testId: two-dimensional-sync-jump, fallbacks: [{label: 'Jump both views to row 20 column 10'}]}
+  - stepId: verifyTwoDimensionalSyncState
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertTwoDimensionalSyncStatus
+          action:
+            type: assertVisible
+            locator: {testId: two-dimensional-sync-status}
+  - stepId: openNavigationForTimeline
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealTimeline
+    action:
+      type: scrollUntilVisible
+      locator: {text: Open Timeline}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openTimeline
+    action:
+      type: tap
+      locator: {text: Open Timeline}
+  - stepId: verifyTimelineRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /chat-and-paging/open-timeline}
+  - stepId: loadNewerTimeline
+    action:
+      type: tap
+      locator: {testId: open-timeline-load-after, fallbacks: [{label: 'Load and animate to newer entries'}]}
+  - stepId: verifyTimelineCommand
+    retry:
+      maxAttempts: 4
+      delayMs: 300
+      steps:
+        - stepId: assertTimelineCompleted
+          action:
+            type: assertVisible
+            locator: {text: clamped}
+  - stepId: openNavigationForCarousel
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealCarousel
+    action:
+      type: scrollUntilVisible
+      locator: {text: Page + Item}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openCarousel
+    action:
+      type: tap
+      locator: {text: Page + Item}
+  - stepId: verifyCarouselRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /page-view/carousel}
+  - stepId: jumpCarouselTarget
+    action:
+      type: tap
+      locator: {testId: page-carousel-jump, fallbacks: [{label: 'Jump to page 3 and its item'}]}
+  - stepId: verifyCarouselCommand
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertCarouselCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: openNavigationForPageSync
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealPageSync
+    action:
+      type: scrollUntilVisible
+      locator: {text: Page Sync}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openPageSync
+    action:
+      type: tap
+      locator: {text: Page Sync}
+  - stepId: verifyPageSyncRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /page-view/sync}
+  - stepId: jumpSynchronizedPage
+    action:
+      type: tap
+      locator: {testId: page-sync-jump, fallbacks: [{label: 'Jump leader to page 3'}]}
+  - stepId: verifyPageSyncState
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertPageSyncStatus
+          action:
+            type: assertVisible
+            locator: {testId: page-sync-status}
+  - stepId: openNavigationForTreeTable
+    action:
+      type: tap
+      locator: {label: 'Open navigation menu'}
+  - stepId: revealTreeTable
+    action:
+      type: scrollUntilVisible
+      locator: {text: Tree Table}
+      direction: down
+      maxScrolls: 12
+      durationMs: 120
+      revealAlignment: center
+  - stepId: openTreeTable
+    action:
+      type: tap
+      locator: {text: Tree Table}
+  - stepId: verifyTreeTableRoute
+    action:
+      type: waitFor
+      condition: {type: route, route: /two-dimensional/tree-table}
+  - stepId: seekTreeCell
+    action:
+      type: tap
+      locator: {testId: tree-table-seek, fallbacks: [{label: 'Animate to a deep table cell'}]}
+  - stepId: verifyTreeCellCommand
+    retry:
+      maxAttempts: 4
+      delayMs: 250
+      steps:
+        - stepId: assertTreeCellCompleted
+          action:
+            type: assertVisible
+            locator: {text: completed}
+  - stepId: captureG6Proof
+    action:
+      type: captureScreenshot
+      artifactName: seeko-g6-scenarios
+      captureOptions:
+        reason: acceptance
+        includeSnapshot: true
+        attachToStep: true
+        profile: flutterPreferred
+        allowFallback: true

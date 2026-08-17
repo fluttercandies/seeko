@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Seeko social preview</title>
+  <desc id="description">The Seeko Synced S Rails mark with the product name and Flutter scroll orchestration tagline.</desc>
+  <rect width="1280" height="640" fill="#07111F"/>
+  <g transform="translate(108 152) scale(2.625)">
+    <path d="M26 34H82C96 34 102 42 102 51C102 60 96 68 82 68H46" fill="none" stroke="#4C7DFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M102 60H46C32 60 26 68 26 77C26 86 32 94 46 94H102" fill="none" stroke="#16C79A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M30 47H75C88 47 94 54 94 62C94 70 88 77 75 77H53" fill="none" stroke="#F8FAFC" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="64" cy="64" r="8" fill="#16C79A" stroke="#07111F" stroke-width="4"/>
+  </g>
+  <text x="512" y="286" fill="#F8FAFC" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="112" font-weight="700">Seeko</text>
+  <text x="518" y="356" fill="#AFC1D4" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="30">High-performance scroll orchestration for Flutter</text>
+  <g transform="translate(518 406)">
+    <rect width="126" height="44" rx="4" fill="#14253A"/>
+    <rect x="138" width="142" height="44" rx="4" fill="#14253A"/>
+    <rect x="292" width="132" height="44" rx="4" fill="#14253A"/>
+    <rect x="436" width="176" height="44" rx="4" fill="#14253A"/>
+    <text x="18" y="30" fill="#F8FAFC" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="20">TARGET</text>
+    <text x="156" y="30" fill="#F8FAFC" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="20">ANIMATE</text>
+    <text x="310" y="30" fill="#F8FAFC" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="20">OBSERVE</text>
+    <text x="454" y="30" fill="#F8FAFC" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="20">SYNCHRONIZE</text>
+  </g>
+</svg>

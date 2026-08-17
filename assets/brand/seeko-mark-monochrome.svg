@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Monochrome Seeko logo">
+  <defs>
+    <path id="rail" d="M20 30H82C100 30 108 37 108 48C108 59 99 65 82 65H46C29 65 20 72 20 82C20 93 29 99 46 99H108"/>
+  </defs>
+  <g fill="none" stroke="#07111F" stroke-linecap="round" stroke-linejoin="round" stroke-width="8">
+    <use href="#rail" transform="translate(0 -10)"/>
+    <use href="#rail"/>
+    <use href="#rail" transform="translate(0 10)"/>
+  </g>
+  <circle cx="64" cy="65" r="8" fill="#07111F" stroke="#F8FAFC" stroke-width="3"/>
+</svg>

@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seeko.dev/schemas/motion-prototype-result.schema.json",
+  "title": "Seeko long-distance motion prototype comparison",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "device",
+    "operatingSystem",
+    "thermalState",
+    "powerState",
+    "refreshRateHz",
+    "flutterRevision",
+    "engineRevision",
+    "buildMode",
+    "commit",
+    "seed",
+    "scenario",
+    "matrixCaseCount",
+    "weights",
+    "winner",
+    "evaluations",
+    "requiredBlindReviewers",
+    "blindReviews",
+    "blindReviewComplete"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "motion-prototype-comparison"},
+    "device": {"type": "string", "minLength": 1},
+    "operatingSystem": {"type": "string", "minLength": 1},
+    "thermalState": {"type": "string", "minLength": 1},
+    "powerState": {"type": "string", "minLength": 1},
+    "refreshRateHz": {"type": "number", "minimum": 120},
+    "flutterRevision": {"type": "string", "minLength": 7},
+    "engineRevision": {"type": "string", "minLength": 7},
+    "buildMode": {"enum": ["profile", "release"]},
+    "commit": {"type": "string"},
+    "seed": {"type": "integer"},
+    "scenario": {"const": "motion-prototype-comparison"},
+    "matrixCaseCount": {"const": 120},
+    "weights": {
+      "type": "object",
+      "required": [
+        "frameTime",
+        "childBuilds",
+        "peakMemory",
+        "visualContinuity",
+        "interruptionAndReplan"
+      ],
+      "properties": {
+        "frameTime": {"const": 0.3},
+        "childBuilds": {"const": 0.2},
+        "peakMemory": {"const": 0.15},
+        "visualContinuity": {"const": 0.2},
+        "interruptionAndReplan": {"const": 0.15}
+      },
+      "additionalProperties": false
+    },
+    "winner": {
+      "enum": [
+        "dualViewportCrossfade",
+        "tagSegmentedSearch",
+        "virtualWindowRebase"
+      ]
+    },
+    "evaluations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/evaluation"}
+    },
+    "requiredBlindReviewers": {"const": 5},
+    "blindReviews": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/blindReview"}
+    },
+    "medianWinnerRating": {
+      "type": ["number", "null"],
+      "minimum": 1,
+      "maximum": 5
+    },
+    "blindReviewComplete": {"type": "boolean"}
+  },
+  "$defs": {
+    "evaluation": {
+      "type": "object",
+      "required": [
+        "candidate",
+        "passesHardGates",
+        "hardGateFailures",
+        "frameCostMicros",
+        "childBuilds",
+        "peakMemoryBytes",
+        "visualDiscontinuity",
+        "interruptionAndReplanCost",
+        "score",
+        "cases",
+        "captures"
+      ],
+      "properties": {
+        "candidate": {
+          "enum": [
+            "dualViewportCrossfade",
+            "tagSegmentedSearch",
+            "virtualWindowRebase"
+          ]
+        },
+        "passesHardGates": {"type": "boolean"},
+        "hardGateFailures": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "frameCostMicros": {"type": "number", "minimum": 0},
+        "childBuilds": {"type": "number", "minimum": 0},
+        "peakMemoryBytes": {"type": "number", "minimum": 0},
+        "visualDiscontinuity": {"type": "number", "minimum": 0},
+        "interruptionAndReplanCost": {"type": "number", "minimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 100},
+        "cases": {"type": "array"},
+        "captures": {
+          "type": "array",
+          "minItems": 120,
+          "items": {"$ref": "#/$defs/capture"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "capture": {
+      "type": "object",
+      "required": [
+        "candidate",
+        "result",
+        "uninterrupted",
+        "interrupted",
+        "frameSamples"
+      ],
+      "properties": {
+        "candidate": {"type": "string"},
+        "result": {"type": "object"},
+        "uninterrupted": {"type": "object"},
+        "interrupted": {"type": "object"},
+        "frameSamples": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/frameSample"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "frameSample": {
+      "type": "object",
+      "required": [
+        "frameNumber",
+        "buildMicros",
+        "rasterMicros",
+        "totalMicros",
+        "vsyncOverheadMicros",
+        "layerCacheCount",
+        "layerCacheBytes",
+        "pictureCacheCount",
+        "pictureCacheBytes"
+      ],
+      "properties": {
+        "frameNumber": {"type": "integer"},
+        "buildMicros": {"type": "integer", "minimum": 0},
+        "rasterMicros": {"type": "integer", "minimum": 0},
+        "totalMicros": {"type": "integer", "minimum": 0},
+        "vsyncOverheadMicros": {"type": "integer", "minimum": 0},
+        "layerCacheCount": {"type": "integer", "minimum": 0},
+        "layerCacheBytes": {"type": "integer", "minimum": 0},
+        "pictureCacheCount": {"type": "integer", "minimum": 0},
+        "pictureCacheBytes": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "blindReview": {
+      "type": "object",
+      "required": ["reviewerId", "candidate", "rating", "notes"],
+      "properties": {
+        "reviewerId": {"type": "string", "minLength": 1},
+        "candidate": {"type": "string"},
+        "rating": {"type": "integer", "minimum": 1, "maximum": 5},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
