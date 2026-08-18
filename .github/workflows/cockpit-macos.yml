@@ -2,12 +2,6 @@ name: Cockpit macOS E2E
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "lib/**"
-      - "example/**"
-      - ".github/workflows/cockpit-macos.yml"
 
 permissions:
   contents: read
