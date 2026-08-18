@@ -2341,13 +2341,13 @@ class SeekoController extends ScrollController {
         return null;
       }
       if (configuration.motion.kind == ScrollMotionKind.instant) {
-        return jumpToTarget(
+        return await jumpToTarget(
           target,
           placement: configuration.placement,
           options: configuration.options,
         );
       }
-      return animateToTarget(
+      return await animateToTarget(
         target,
         placement: configuration.placement,
         motion: configuration.motion,

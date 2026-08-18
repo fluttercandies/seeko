@@ -1,3 +1,15 @@
+## 1.0.1 - 2026-08-18
+
+- Keep snap transactions active until their asynchronous jump or animation
+  finishes, preserving correct cancellation and lifecycle state.
+- Make every Melos workspace script independent of a globally installed
+  `melos` executable.
+- Isolate minimum-Flutter tests from the newer example SDK constraint and add
+  the Linux GStreamer development dependencies required by Cockpit.
+- Align the example with Flutter's current macOS 12 deployment target and make
+  pub.dev and GitHub release automation safe to rerun.
+- Upgrade checkout workflows to the Node.js 24-based `actions/checkout` v7.
+
 ## 1.0.0 - 2026-08-18
 
 - Add the unified `SeekoController` target-command and observation API while

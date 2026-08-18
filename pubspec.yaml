@@ -1,6 +1,6 @@
 name: seeko
 description: High-performance target navigation, motion, observation, and synchronization for native Flutter scrollables.
-version: 1.0.0
+version: 1.0.1
 homepage: https://pub.dev/packages/seeko
 repository: https://github.com/fluttercandies/seeko
 issue_tracker: https://github.com/fluttercandies/seeko/issues

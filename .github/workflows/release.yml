@@ -20,7 +20,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out source
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Install latest stable Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
@@ -55,10 +55,32 @@ jobs:
       - name: Validate API documentation
         run: dart doc --validate-links
 
+      - name: Check whether this version is already published
+        id: publication
+        shell: bash
+        run: |
+          package_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          response_path="${RUNNER_TEMP}/pub-version.json"
+          status_code="$(curl --silent --show-error \
+            --output "${response_path}" \
+            --write-out '%{http_code}' \
+            "https://pub.dev/api/packages/seeko/versions/${package_version}")"
+          case "${status_code}" in
+            200) echo "exists=true" >> "${GITHUB_OUTPUT}" ;;
+            404) echo "exists=false" >> "${GITHUB_OUTPUT}" ;;
+            *)
+              cat "${response_path}"
+              echo "Unexpected pub.dev response: ${status_code}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Audit publish archive
+        if: steps.publication.outputs.exists != 'true'
         run: dart pub publish --dry-run
 
       - name: Publish with pub.dev trusted publishing
+        if: steps.publication.outputs.exists != 'true'
         run: dart pub publish --force
 
   github-release:
@@ -72,5 +94,12 @@ jobs:
       - name: Create release notes
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --verify-tag --generate-notes
-
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --verify-tag \
+            --generate-notes

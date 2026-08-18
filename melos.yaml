@@ -13,18 +13,18 @@ scripts:
   format:check:
     run: dart format --output=none --set-exit-if-changed .
   test:
-    run: melos exec --concurrency 1 --dir-exists=test -- "flutter test"
+    run: dart run melos exec --concurrency 1 --dir-exists=test -- "flutter test"
   benchmark:smoke:
-    run: melos exec --scope=seeko_benchmark -- "flutter test test/benchmark_schema_test.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "flutter test test/benchmark_schema_test.dart"
   benchmark:native-baseline:
-    run: melos exec --scope=seeko_benchmark -- "dart run tool/run_native_baseline.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "dart run tool/run_native_baseline.dart"
   benchmark:motion-prototypes:
-    run: melos exec --scope=seeko_benchmark -- "dart run tool/run_motion_prototypes.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "dart run tool/run_motion_prototypes.dart"
   benchmark:sync-coordinator:
-    run: melos exec --scope=seeko_benchmark -- "dart run tool/run_scroll_sync_coordinator.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "dart run tool/run_scroll_sync_coordinator.dart"
   benchmark:g6-core:
-    run: melos exec --scope=seeko_benchmark -- "dart run tool/run_g6_core.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "dart run tool/run_g6_core.dart"
   benchmark:g6-web-build:
-    run: melos exec --scope=seeko_benchmark -- "flutter build web --release -t lib/g6_core_web_main.dart"
+    run: dart run melos exec --scope=seeko_benchmark -- "flutter build web --release -t lib/g6_core_web_main.dart"
   example:build:macos:
-    run: melos exec --scope=seeko_example -- "flutter build macos --debug"
+    run: dart run melos exec --scope=seeko_example -- "flutter build macos --debug"
