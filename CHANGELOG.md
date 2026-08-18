@@ -1,3 +1,12 @@
+## 1.0.3 - 2026-08-18
+
+- Prevent lazy variable-extent metrics from reopening progress-sync correction
+  loops after scrolling settles.
+- Treat subpixel synchronization differences within 0.5 logical pixels as
+  stable instead of issuing redundant follower writes.
+- Keep the example sidebar fixed during route transitions and make the
+  progress-sync catalog publish deterministic native list extents.
+
 ## 1.0.2 - 2026-08-18
 
 - Add the real example interface to the package and both READMEs.

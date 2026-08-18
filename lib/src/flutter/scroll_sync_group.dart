@@ -1,5 +1,7 @@
 part of 'seeko_controller.dart';
 
+const double _scrollSyncPixelTolerance = 0.5;
+
 /// Whether a synchronization member may lead, follow, or only observe.
 enum ScrollSyncRole { bidirectional, leaderOnly, followerOnly, observer }
 
@@ -1364,7 +1366,7 @@ final class ScrollSyncGroup extends ChangeNotifier {
       .._lastApplyClamped = target != requested
       .._lastApplied = true;
     if (mode == ScrollSyncMode.strict &&
-        (target - member._pixels).abs() <= 1e-9) {
+        (target - member._pixels).abs() <= _scrollSyncPixelTolerance) {
       return false;
     }
     final bool applied = member.controller._applySynchronizedLogicalPixels(
@@ -1405,7 +1407,7 @@ final class ScrollSyncGroup extends ChangeNotifier {
     member
       .._lastApplyClamped = target != requested
       .._lastApplied = true;
-    if ((target - member._pixels).abs() <= 1e-9) {
+    if ((target - member._pixels).abs() <= _scrollSyncPixelTolerance) {
       return false;
     }
     return _applyNaturalTargetToMember(
@@ -1428,7 +1430,7 @@ final class ScrollSyncGroup extends ChangeNotifier {
         target: boundedTarget,
         timestamp: _currentFrameTime,
       );
-    if ((boundedTarget - member._pixels).abs() <= 1e-9) {
+    if ((boundedTarget - member._pixels).abs() <= _scrollSyncPixelTolerance) {
       return false;
     }
     final NaturalSyncPhysicsProfile profile = member._naturalPhysicsProfile!;
@@ -1479,9 +1481,18 @@ final class ScrollSyncGroup extends ChangeNotifier {
       return;
     }
     final bool metricsChanged = !wasAttached ||
-        previousMaxScrollExtent != member._maxScrollExtent ||
-        previousViewportExtent != member._viewportExtent;
+        (previousMaxScrollExtent - member._maxScrollExtent).abs() >
+            _scrollSyncPixelTolerance ||
+        (previousViewportExtent - member._viewportExtent).abs() >
+            _scrollSyncPixelTolerance;
     if (!metricsChanged || _leader == null || _metricsCorrectionScheduled) {
+      return;
+    }
+    final bool followerMetrics = !identical(member, _leader);
+    // A follower may emit several layout samples while lazy extents converge.
+    // Stop only after the correction target reverses at a stable canonical
+    // coordinate; monotonic extent convergence must remain correctable.
+    if (followerMetrics && member._metricsCorrectionOscillating) {
       return;
     }
     _metricsCorrectionScheduled = true;
@@ -1504,20 +1515,88 @@ final class ScrollSyncGroup extends ChangeNotifier {
       if (_canonicalCoordinate == null) {
         return;
       }
-      final int transactionId = _nextTransactionId - 1;
+      final int correctionTransactionId = _nextTransactionId - 1;
       for (final _ScrollSyncMemberState follower in _members) {
         if (identical(follower, _leader) || !_canFollow(follower)) {
           continue;
         }
+        if (_shouldSuppressMetricsCorrection(
+          follower,
+          transactionId: correctionTransactionId,
+          coordinate: _canonicalCoordinate!,
+        )) {
+          continue;
+        }
         if (_applyLiveCanonicalToMember(
           follower,
-          transactionId: transactionId,
+          transactionId: correctionTransactionId,
         )) {
           _followerApplyCount++;
         }
       }
       _scheduleNotification();
     });
+  }
+
+  bool _shouldSuppressMetricsCorrection(
+    _ScrollSyncMemberState member, {
+    required int transactionId,
+    required double coordinate,
+  }) {
+    final double requested = mapping.groupToMemberValues(
+      coordinate: coordinate,
+      pixels: member._pixels,
+      minScrollExtent: 0,
+      maxScrollExtent: member._maxScrollExtent,
+      viewportExtent: member._viewportExtent,
+      origin: member._transactionOrigin,
+    );
+    final double target = requested.clamp(0, member._maxScrollExtent);
+    final bool newTransaction =
+        member._metricsCorrectionTransactionId != transactionId;
+    final double? trackedCoordinate = member._metricsCorrectionCoordinate;
+    final double? trackedTarget = trackedCoordinate == null
+        ? null
+        : mapping
+            .groupToMemberValues(
+              coordinate: trackedCoordinate,
+              pixels: member._pixels,
+              minScrollExtent: 0,
+              maxScrollExtent: member._maxScrollExtent,
+              viewportExtent: member._viewportExtent,
+              origin: member._transactionOrigin,
+            )
+            .clamp(0, member._maxScrollExtent);
+    final bool newCoordinate = trackedTarget == null ||
+        (trackedTarget - target).abs() > _scrollSyncPixelTolerance;
+    if (newTransaction || newCoordinate) {
+      member
+        .._metricsCorrectionTransactionId = transactionId
+        .._metricsCorrectionCoordinate = coordinate
+        .._metricsCorrectionCount = 0
+        .._metricsCorrectionPreviousTarget = null
+        .._metricsCorrectionLastTarget = null
+        .._metricsCorrectionOscillating = false;
+    }
+    if (member._metricsCorrectionOscillating ||
+        member._metricsCorrectionCount >= 8) {
+      member._metricsCorrectionOscillating = true;
+      return true;
+    }
+    final double? previousTarget = member._metricsCorrectionPreviousTarget;
+    final double? lastTarget = member._metricsCorrectionLastTarget;
+    if (previousTarget != null &&
+        lastTarget != null &&
+        (target - previousTarget).abs() <= _scrollSyncPixelTolerance &&
+        (target - lastTarget).abs() > _scrollSyncPixelTolerance) {
+      member._metricsCorrectionOscillating = true;
+      return true;
+    }
+    member
+      .._metricsCorrectionPreviousTarget = lastTarget
+      .._metricsCorrectionLastTarget = target
+      .._metricsCorrectionCount += 1;
+    return false;
   }
 
   void _handleSemanticMappingChanged() {
@@ -1746,6 +1825,12 @@ final class _ScrollSyncMemberState implements ScrollSyncCoordinatorParticipant {
   var _transactionOrigin = 0.0;
   var _lastApplyClamped = false;
   var _lastApplied = false;
+  int? _metricsCorrectionTransactionId;
+  double? _metricsCorrectionCoordinate;
+  double? _metricsCorrectionPreviousTarget;
+  double? _metricsCorrectionLastTarget;
+  var _metricsCorrectionCount = 0;
+  var _metricsCorrectionOscillating = false;
   var _synchronizationStatus =
       ScrollSyncMemberSynchronizationStatus.synchronized;
   String? _semanticFailure;
@@ -1810,7 +1895,7 @@ final class _ScrollSyncMemberState implements ScrollSyncCoordinatorParticipant {
     _naturalTargetLogicalPixels = target;
     _naturalLatestTargetAt = timestamp;
     _naturalCurrentMappingError = error;
-    _naturalSettled = error <= 0.5;
+    _naturalSettled = error <= _scrollSyncPixelTolerance;
     _naturalSettleLag = _naturalSettled ? Duration.zero : null;
   }
 
@@ -1838,7 +1923,7 @@ final class _ScrollSyncMemberState implements ScrollSyncCoordinatorParticipant {
     if (error > _naturalPeakMappingError) {
       _naturalPeakMappingError = error;
     }
-    if (error <= 0.5) {
+    if (error <= _scrollSyncPixelTolerance) {
       if (!_naturalSettled) {
         final Duration? latestTargetAt = _naturalLatestTargetAt;
         _naturalSettleLag =

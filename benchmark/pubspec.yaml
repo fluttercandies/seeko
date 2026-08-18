@@ -1,6 +1,6 @@
 name: seeko_benchmark
 description: Reproducible correctness and performance harness for Seeko.
-version: 1.0.2
+version: 1.0.3
 publish_to: none
 
 environment:

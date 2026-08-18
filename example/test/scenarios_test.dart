@@ -75,6 +75,37 @@ void main() {
     expect(left.data, isNot('0.0%'));
   });
 
+  testWidgets('progress sync settles after a long drag without drift', (
+    WidgetTester tester,
+  ) async {
+    await pumpRoute(tester, SeekoRoutes.progressSync);
+
+    final TestGesture gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const Key('progress-sync-left'))),
+    );
+    for (var index = 0; index < 120; index += 1) {
+      await gesture.moveBy(const Offset(0, -18));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await gesture.up();
+
+    final List<String?> rightValues = <String?>[];
+    for (var index = 0; index < 120; index += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      rightValues.add(
+        tester.widget<Text>(find.byKey(const Key('progress-right-value'))).data,
+      );
+    }
+    final Text left = tester.widget<Text>(
+      find.byKey(const Key('progress-left-value')),
+    );
+    final Text right = tester.widget<Text>(
+      find.byKey(const Key('progress-right-value')),
+    );
+    expect(rightValues.skip(20).toSet(), hasLength(1));
+    expect(right.data, left.data);
+  });
+
   testWidgets('vertical category rail drives content and follows user scroll', (
     WidgetTester tester,
   ) async {

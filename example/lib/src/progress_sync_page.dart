@@ -146,6 +146,15 @@ class _SyncList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double itemExtentAt(int index) {
+      final double height = heightFor(index);
+      return (height < 72 ? 72 : height) + 10;
+    }
+
+    var totalExtent = 0.0;
+    for (var index = 0; index < itemCount; index += 1) {
+      totalExtent += itemExtentAt(index);
+    }
     return Column(
       children: <Widget>[
         ScenarioPaneHeader(
@@ -168,47 +177,71 @@ class _SyncList extends StatelessWidget {
         Expanded(
           child: Scrollbar(
             controller: controller,
-            child: ListView.builder(
+            child: ListView.custom(
               controller: controller,
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-              itemCount: itemCount,
-              itemBuilder: (BuildContext context, int index) {
-                final double height = heightFor(index);
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: height),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: color.withValues(
-                          alpha: index.isEven ? 0.07 : 0.11,
+              itemExtentBuilder: (int index, _) => itemExtentAt(index),
+              semanticChildCount: itemCount,
+              childrenDelegate: _ExactExtentBuilderDelegate(
+                childCount: itemCount,
+                totalExtent: totalExtent,
+                builder: (BuildContext context, int index) {
+                  final double height = heightFor(index);
+                  final double rowHeight = height < 72 ? 72 : height;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints.tightFor(height: rowHeight),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: color.withValues(
+                            alpha: index.isEven ? 0.07 : 0.11,
+                          ),
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.18),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(11),
-                        border: Border.all(
-                          color: color.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: color,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onPrimary,
-                          child: Text('${index + 1}'),
-                        ),
-                        title: Text('Catalog entry ${index + 1}'),
-                        subtitle: Text(
-                          '${height.toStringAsFixed(0)} px minimum extent',
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: color,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary,
+                            child: Text('${index + 1}'),
+                          ),
+                          title: Text('Catalog entry ${index + 1}'),
+                          subtitle: Text(
+                            '${height.toStringAsFixed(0)} px minimum extent',
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
       ],
     );
   }
+}
+
+final class _ExactExtentBuilderDelegate extends SliverChildBuilderDelegate {
+  _ExactExtentBuilderDelegate({
+    required NullableIndexedWidgetBuilder builder,
+    required int childCount,
+    required this.totalExtent,
+  }) : super(builder, childCount: childCount);
+
+  final double totalExtent;
+
+  @override
+  double estimateMaxScrollOffset(
+    int firstIndex,
+    int lastIndex,
+    double leadingScrollOffset,
+    double trailingScrollOffset,
+  ) => totalExtent;
 }

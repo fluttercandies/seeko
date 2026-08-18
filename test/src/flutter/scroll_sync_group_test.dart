@@ -82,6 +82,47 @@ void main() {
     right.dispose();
   });
 
+  testWidgets('progress correction does not oscillate after a long drag', (
+    WidgetTester tester,
+  ) async {
+    final SeekoController left = SeekoController();
+    final SeekoController right = SeekoController();
+    final ScrollSyncGroup group = ScrollSyncGroup.progress();
+    group.add(left, id: 'left');
+    group.add(right, id: 'right');
+
+    await tester.pumpWidget(_twoVariableLists(left: left, right: right));
+    final TestGesture gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const Key('variable-left'))),
+    );
+    for (var index = 0; index < 120; index += 1) {
+      await gesture.moveBy(const Offset(0, -18));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await gesture.up();
+
+    final List<double> settledOffsets = <double>[];
+    for (var index = 0; index < 120; index += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      settledOffsets.add(right.offset);
+    }
+    expect(
+      settledOffsets.skip(20).toSet(),
+      hasLength(1),
+      reason: 'follower metrics must not reopen the same correction loop',
+    );
+    expect(
+      right.offset / right.position.maxScrollExtent,
+      closeTo(left.offset / left.position.maxScrollExtent, 1e-9),
+      reason: 'suppressing an oscillation must still settle at the canonical '
+          'progress coordinate',
+    );
+
+    group.dispose();
+    left.dispose();
+    right.dispose();
+  });
+
   testWidgets('either bidirectional member can take over as leader', (
     WidgetTester tester,
   ) async {
