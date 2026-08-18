@@ -55,6 +55,9 @@ jobs:
     name: Full quality / latest stable
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -89,7 +92,7 @@ jobs:
         run: dart run tool/check_coverage.dart --minimum 85 coverage/lcov.info
 
       - name: Upload root coverage report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: root-lcov
           path: coverage/lcov.info
@@ -97,13 +100,15 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           files: coverage/lcov.info
           flags: root
           name: seeko-root
           slug: fluttercandies/seeko
           fail_ci_if_error: true
+          use_oidc: true
 
       - name: Run benchmark smoke test
         run: dart run melos run benchmark:smoke
