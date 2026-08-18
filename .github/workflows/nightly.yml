@@ -43,7 +43,7 @@ jobs:
 
       - name: Run benchmark contract and scale tests
         run: |
-          flutter test benchmark/test
+          (cd benchmark && flutter test)
           flutter test test/src/core/scroll_sync_coordinator_kernel_test.dart
 
       - name: Validate docs and package archive
