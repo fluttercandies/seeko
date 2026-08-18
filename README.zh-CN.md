@@ -25,6 +25,15 @@ Seeko 在 Flutter 的 `ListView`、`GridView`、`CustomScrollView`、`PageView`
 同步，同时保留 Flutter 对渲染、physics、语义和生命周期的控制。不需要学习
 另一套平行的高层组件体系。
 
+<p align="center">
+  <a href="https://fluttercandies.github.io/seeko/"><img src="seeko.png" alt="Seeko Example 的目标定位、原生滚动与命令诊断界面" width="100%"></a>
+</p>
+
+<p align="center">
+  <a href="https://fluttercandies.github.io/seeko/">在线 Web Demo</a> ·
+  <a href="https://github.com/fluttercandies/seeko/releases/latest">下载 Example 应用</a>
+</p>
+
 ## 安装
 
 ```bash
@@ -220,6 +229,10 @@ member 数量线性相关，使用共享 transaction，而不是为每个视图�
 
 [`example`](example/README.md) 应用提供可运行的目标定位、分类栏、顶部横向标签、遮挡表单、
 Grid、嵌套滚动、页面、开放数据、二维 cell、表格和多视图同步场景。
+可以直接打开[在线 Web Demo](https://fluttercandies.github.io/seeko/)，或从
+[最新 GitHub Release](https://github.com/fluttercandies/seeko/releases/latest)
+下载 Android、iOS Simulator、macOS、Windows、Linux 和 Web 安装/运行包。
+桌面端与 iOS 产物属于未签名的开发分发包。
 
 ```bash
 cd example

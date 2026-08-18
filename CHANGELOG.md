@@ -1,3 +1,11 @@
+## 1.0.2 - 2026-08-18
+
+- Add the real example interface to the package and both READMEs.
+- Publish six-platform example distributions as GitHub Release assets and
+  deploy the Web example to GitHub Pages.
+- Keep coverage enforcement self-contained in GitHub Actions and repair the
+  randomized and benchmark working-directory paths in Nightly validation.
+
 ## 1.0.1 - 2026-08-18
 
 - Keep snap transactions active until their asynchronous jump or animation

@@ -1,0 +1,372 @@
+name: Example distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag that receives the built assets
+        required: false
+        type: string
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: example-distribution-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Android release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build release APK
+        working-directory: example
+        run: flutter build apk --release --no-pub
+
+      - name: Package release APK
+        working-directory: example
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "dist/seeko-example-${{ steps.package.outputs.version }}-android.apk"
+
+      - name: Upload Android distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-android-${{ steps.package.outputs.version }}
+          path: example/dist/*.apk
+          if-no-files-found: error
+          retention-days: 90
+
+  ios:
+    name: iOS Simulator app
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build iOS Simulator app
+        working-directory: example
+        run: flutter build ios --simulator --debug --no-pub
+
+      - name: Package iOS Simulator app
+        working-directory: example
+        shell: bash
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/ios/iphonesimulator/Runner.app \
+            "dist/seeko-example-${{ steps.package.outputs.version }}-ios-simulator.zip"
+
+      - name: Upload iOS Simulator distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-ios-${{ steps.package.outputs.version }}
+          path: example/dist/*.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  macos:
+    name: macOS release app
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build macOS release
+        working-directory: example
+        run: flutter build macos --release --no-pub
+
+      - name: Package macOS app
+        working-directory: example
+        shell: bash
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/seeko_example.app \
+            "dist/seeko-example-${{ steps.package.outputs.version }}-macos.zip"
+
+      - name: Upload macOS distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-macos-${{ steps.package.outputs.version }}
+          path: example/dist/*.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  web:
+    name: Web release bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build Web release
+        working-directory: example
+        run: flutter build web --release --no-pub
+
+      - name: Package Web bundle
+        working-directory: example
+        shell: bash
+        run: |
+          mkdir -p dist
+          tar -czf "dist/seeko-example-${{ steps.package.outputs.version }}-web.tar.gz" \
+            -C build/web .
+
+      - name: Upload Web distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-web-${{ steps.package.outputs.version }}
+          path: example/dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 90
+
+  windows:
+    name: Windows release bundle
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build Windows release
+        working-directory: example
+        run: flutter build windows --release --no-pub
+
+      - name: Package Windows bundle
+        working-directory: example
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive `
+            -Path build/windows/x64/runner/Release/* `
+            -DestinationPath "dist/seeko-example-${{ steps.package.outputs.version }}-windows-x64.zip"
+
+      - name: Upload Windows distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-windows-${{ steps.package.outputs.version }}
+          path: example/dist/*.zip
+          if-no-files-found: error
+          retention-days: 90
+
+  linux:
+    name: Linux release bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libgtk-3-dev \
+            liblzma-dev \
+            ninja-build \
+            pkg-config
+
+      - name: Install latest stable Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: Build Linux release
+        working-directory: example
+        run: flutter build linux --release --no-pub
+
+      - name: Package Linux bundle
+        working-directory: example
+        shell: bash
+        run: |
+          mkdir -p dist
+          tar -czf "dist/seeko-example-${{ steps.package.outputs.version }}-linux-x64.tar.gz" \
+            -C build/linux/x64/release/bundle .
+
+      - name: Upload Linux distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: seeko-example-linux-${{ steps.package.outputs.version }}
+          path: example/dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 90
+
+  attach-release:
+    name: Attach distributions to GitHub Release
+    needs: [android, ios, macos, web, windows, linux]
+    if: github.event_name == 'push' || inputs.release_tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="$REQUESTED_TAG"
+          fi
+          package_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml)"
+          test "$tag" = "v$package_version"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download built distributions
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+        with:
+          pattern: seeko-example-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Wait for the package release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          for attempt in $(seq 1 60); do
+            if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Release $RELEASE_TAG was not available after 10 minutes." >&2
+          exit 1
+
+      - name: Upload public release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          shopt -s nullglob
+          assets=(release-assets/*)
+          test "${#assets[@]}" -eq 6
+          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber

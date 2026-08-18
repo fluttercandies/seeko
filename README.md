@@ -26,6 +26,15 @@ and scalable synchronization while keeping Flutter's `ListView`, `GridView`,
 physics, semantics, and lifecycle. There is no replacement widget hierarchy to
 learn.
 
+<p align="center">
+  <a href="https://fluttercandies.github.io/seeko/"><img src="seeko.png" alt="Seeko example showing target navigation, native scrolling, and command diagnostics" width="100%"></a>
+</p>
+
+<p align="center">
+  <a href="https://fluttercandies.github.io/seeko/">Live Web demo</a> ·
+  <a href="https://github.com/fluttercandies/seeko/releases/latest">Download example apps</a>
+</p>
+
 ## Install
 
 ```bash
@@ -236,6 +245,10 @@ driver with an explicit extent/key contract.
 The [`example`](example/README.md) app contains runnable routes for target navigation,
 category rails, horizontal tabs, obstruction-aware forms, grids, nested scroll,
 pages, open data, two-dimensional cells, tables, and multi-view synchronization.
+Run it in the [Web demo](https://fluttercandies.github.io/seeko/) or download the
+Android, iOS Simulator, macOS, Windows, Linux, and Web packages from the
+[latest GitHub Release](https://github.com/fluttercandies/seeko/releases/latest).
+Desktop and iOS artifacts are unsigned development distributions.
 
 ```bash
 cd example
