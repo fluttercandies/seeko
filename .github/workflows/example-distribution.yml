@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   android:
-    name: Android release APK
+    name: Android debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -45,17 +45,17 @@ jobs:
         working-directory: example
         run: flutter pub get
 
-      - name: Build release APK
+      - name: Build debug APK
         working-directory: example
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --debug --no-pub
 
-      - name: Package release APK
+      - name: Package debug APK
         working-directory: example
         shell: bash
         run: |
           mkdir -p dist
-          cp build/app/outputs/flutter-apk/app-release.apk \
-            "dist/seeko-example-${{ steps.package.outputs.version }}-android.apk"
+          cp build/app/outputs/flutter-apk/app-debug.apk \
+            "dist/seeko-example-${{ steps.package.outputs.version }}-android-debug.apk"
 
       - name: Upload Android distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
