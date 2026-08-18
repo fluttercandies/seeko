@@ -55,4 +55,28 @@ void main() {
     expect(find.byKey(const Key('scenario-header')), findsOneWidget);
     expect(find.byKey(const Key('natural-motion-list')), findsOneWidget);
   });
+
+  testWidgets('sidebar stays fixed while switching catalog routes', (
+    WidgetTester tester,
+  ) async {
+    await pumpRoute(
+      tester,
+      SeekoRoutes.targetNavigation,
+      size: const Size(1280, 820),
+    );
+
+    final Finder sidebar = find.byKey(const Key('catalog-sidebar'));
+    final Rect initialBounds = tester.getRect(sidebar);
+    final Finder progressSync = find.descendant(
+      of: find.byKey(const Key('catalog-navigation')),
+      matching: find.text('Progress Sync'),
+    );
+
+    await tester.tap(progressSync);
+    await tester.pump();
+
+    expect(sidebar, findsOneWidget);
+    expect(tester.getRect(sidebar), initialBounds);
+    expect(find.text('Different extents, one progress'), findsOneWidget);
+  });
 }

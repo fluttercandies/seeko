@@ -81,9 +81,11 @@ class SeekoExampleApp extends StatelessWidget {
           _ => null,
         };
         if (page == null) return null;
-        return MaterialPageRoute<void>(
+        return PageRouteBuilder<void>(
           settings: settings,
-          builder: (_) =>
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (_, _, _) =>
               CatalogShell(activeRoute: settings.name!, child: page),
         );
       },
