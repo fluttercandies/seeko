@@ -32,7 +32,7 @@ jobs:
 
       - name: Run randomized package and example tests
         run: |
-          dart test --test-randomize-ordering-seed random
+          flutter test --test-randomize-ordering-seed random
           (cd example && flutter test --test-randomize-ordering-seed random)
 
       - name: Repeat core lifecycle tests
