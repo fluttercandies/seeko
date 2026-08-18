@@ -17,7 +17,6 @@
   <a href="https://github.com/fluttercandies/seeko/actions/workflows/platforms.yml"><img src="https://github.com/fluttercandies/seeko/actions/workflows/platforms.yml/badge.svg" alt="平台编译检查"></a>
   <a href="https://pub.dev/packages/seeko"><img src="https://img.shields.io/pub/v/seeko.svg" alt="pub package"></a>
   <a href="https://pub.dev/packages/seeko/score"><img src="https://img.shields.io/pub/points/seeko" alt="pub points"></a>
-  <a href="https://codecov.io/gh/fluttercandies/seeko"><img src="https://codecov.io/gh/fluttercandies/seeko/branch/main/graph/badge.svg" alt="测试覆盖率"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
